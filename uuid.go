@@ -1,13 +1,16 @@
-// +build linux
-
-// Package uuid provides functions that create a consistent globally unique UUID
-// for a given TCP socket.
+// Package uuid provides functions that create a consistent globally unique
+// UUID for a given TCP socket.  The package defines a new command-line flag
+// `-uuid-prefix-file`, and that file and its contents should be set up prior
+// to invoking any command which uses this library.
 package uuid
 
 import (
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
+	"sync"
 	"syscall"
 	"unsafe"
 )
@@ -30,48 +33,31 @@ const (
 )
 
 var (
-	// Only calculate these once - they never change. We use the mtime of /proc as
-	// a proxy for the boot time. If the superuser modifies the /proc mount at
-	// runtime with something like `sudo touch /proc` while processes using this
-	// library are running then this will be wrong.
-	cachedPrefixString, cachedPrefixError = getPrefix("/proc")
+	// UUIDPrefixFile is a command-line flag to hold the filename which contains
+	// the UUID prefix. Ideally it will be something like "/var/local/uuid/prefix",
+	// and the contents of the named file will be a string like
+	// "host.example.com_45353453".
+	UUIDPrefixFile = flag.String("uuid-prefix-file", "/var/local/uuid/prefix",
+		"The file holding the UUID prefix for sockets created in this network namespace.")
 
-	// Made into a variable to enable the testing of error handling.
-	osHostname = os.Hostname
+	// Only calculate these once - they never change. These are the contents of a
+	// flag-specified file which holds this configuration information.
+	cachedPrefixString   string
+	cachedPrefixError    error
+	cachedPrefixInitOnce sync.Once
 )
 
-func getBoottime(proxyFile string) (int64, error) {
-	// We use the mtime of the passed-in file as a proxy for the boot time.
-	//
-	// This is potentially brittle, but all existing solutions are worse, as they
-	// depend on the stable conversion of the difference of two floating point
-	// numbers into an integer, by reading /proc/uptime and then subtracting the
-	// first number in that file from time.Now(). If a machine boots up too close
-	// to a half-second boundary, then even the old standby `uptime -s` will become
-	// inconsistent. On the scale of a single machine boot, that's pretty unlikely,
-	// but on M-Lab's scale it will be sure to bite us regularly.
-	stat, err := os.Stat(proxyFile)
-	if err != nil {
-		return 0, err
-	}
-	return stat.ModTime().Unix(), err
-}
-
-// getPrefix returns a prefix string which contains the hostname and boot time
-// of the machine, which globally uniquely identifies the socket uuid namespace.
-// This function is cached because that pair should be constant for a given
-// instance of the program, unless the boot time changes (how?) or the hostname
-// changes (why?) while this program is running.
+// getPrefix returns a prefix string which contains the hostname and approximate
+// boot time of the machine, which globally uniquely identifies the socket uuid
+// namespace, assuming the the namespace was not created more than once in the
+// span of two seconds.
+//
+// The return values of this function should be cached because that pair should
+// be constant for a given instance of the program, unless the boot time changes
+// (how?) or the hostname changes (why?) while this program is running.
 func getPrefix(proxyFile string) (string, error) {
-	hostname, err := osHostname()
-	if err != nil {
-		return "", err
-	}
-	boottime, err := getBoottime(proxyFile)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s_%d", hostname, boottime), nil
+	contents, err := ioutil.ReadFile(proxyFile)
+	return string(contents), err
 }
 
 // getCookie returns the cookie (the UUID) associated with a socket. For a given
@@ -131,6 +117,14 @@ func FromFile(file *os.File) (string, error) {
 // This function will never return the empty string, but the returned string
 // value should only be used if the error is nil.
 func FromCookie(cookie uint64) (string, error) {
+	cachedPrefixInitOnce.Do(
+		func() {
+			// We can't do this setup in init() because the value of the flag needs to be parsed
+			// from the command line. So we do it in this function, which should only be
+			// called once.
+			cachedPrefixString, cachedPrefixError = getPrefix(*UUIDPrefixFile)
+		},
+	)
 	if cachedPrefixError != nil {
 		return invalidUUID, cachedPrefixError
 	}
