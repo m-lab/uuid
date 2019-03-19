@@ -11,4 +11,4 @@ have the same hostname and booted up at the exact same second in time, but it is
 bad practice to give machines the same hostname (so don't).
 
 The design of the UUIDs and this system for creating them can be found in
-`[./DESIGN.md]`.
+[`DESIGN.md`](https://github.com/m-lab/uuid/blob/master/DESIGN.md).
