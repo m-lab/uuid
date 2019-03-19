@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/m-lab/uuid/prefix"
+
 	"github.com/m-lab/go/flagx"
 )
 
@@ -37,7 +39,12 @@ var (
 	// the file which contains the UUID prefix. Ideally the file will be something
 	// like "/var/local/uuid/prefix", and the contents of the file will be bytes
 	// that resemble "host.example.com_45353453".
-	uuidPrefix flagx.FileBytes
+	//
+	// By default it is a string generated in an unsafe manner that contains the
+	// substring "_unsafe_" in it. This is not great, but it is better than the
+	// default of the empty string, and it allows people to use code which uses
+	// this library without having to set up a well-known location.
+	uuidPrefix = flagx.FileBytes(prefix.UnsafeString())
 )
 
 func init() {

@@ -24,7 +24,7 @@ func Generate(filename string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filename, []byte(contents), 0644)
+	err = ioutil.WriteFile(filename, []byte(contents), 0444)
 	if err != nil {
 		return err
 	}
