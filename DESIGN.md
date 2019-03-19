@@ -1,16 +1,18 @@
 # Making tcp-info and paris-traceroute data joinable with experiment data
 
-| author | Peter Boothe <pboothe@google.com>
-| last updated | 2019-03-19
-| status | approved
+author       | Peter Boothe <pboothe@google.com>
+-------------+----------------
+last updated | 2019-03-19
+status       | approved
 
 ## Introduction
 
 We want to join data derived from tcp-info, from paris-traceroute, and from
 the original experiments. We need the solution to be unambiguous, because
-fuzzy matching via timestamps is just awful. We would like the solution to be
-simple, because complex is harder to maintain and simpler makes our data more
-accessible to the world and ourselves.
+fuzzy matching via timestamps represents a usability challenge for M-Lab data
+users. We would like the solution to be simple, because complex is harder to
+maintain and simpler makes our data more accessible to the world and
+ourselves.
 
 ## Background
 
@@ -39,7 +41,7 @@ of all of:
 - server boot time (in seconds-since-epoch, expressed as a decimal rounded to the nearest second)
 - socket TCP cookie (also in hex, a fixed-digit hexadecimal encoding of a 64 bit number)
 
-all joined with underscores. e.g.: `pboothe2.nyc.corp.google.com_1548788619_00000000000084FF`
+all joined with underscores. e.g.: `ndt.mlab3.atl05.measurement-lab.org_1548788619_00000000000084FF`
 
 We need the TCP cookie because it is a socket UUID for a given server
 instance. We need the boot time and the server hostname, because those
@@ -78,7 +80,7 @@ difference between `/proc/uptime` and `time.Now()` into an integer.
 Therefore, we recommend that implementations do the conversion once,
 write the result to a well-known location, and that all libraries read from
 that location. BSD users may, at this point, casually note that they have
-`sysctl kern.boottime` and do not suffer from this Linux-imposed foolishness.
+`sysctl kern.boottime` and do not suffer from this limitation in Linux.
 
 ### Socket TCP Cookie
 
