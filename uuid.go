@@ -7,12 +7,12 @@ package uuid
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
-	"sync"
 	"syscall"
 	"unsafe"
+
+	"github.com/m-lab/go/flagx"
 )
 
 const (
@@ -33,31 +33,15 @@ const (
 )
 
 var (
-	// UUIDPrefixFile is a command-line flag to hold the filename which contains
-	// the UUID prefix. Ideally it will be something like "/var/local/uuid/prefix",
-	// and the contents of the named file will be a string like
-	// "host.example.com_45353453".
-	UUIDPrefixFile = flag.String("uuid-prefix-file", "/var/local/uuid/prefix",
-		"The file holding the UUID prefix for sockets created in this network namespace.")
-
-	// Only calculate these once - they never change. These are the contents of a
-	// flag-specified file which holds this configuration information.
-	cachedPrefixString   string
-	cachedPrefixError    error
-	cachedPrefixInitOnce sync.Once
+	// uuidPrefix is the UUID prefix derived from a command-line flag specifying
+	// the file which contains the UUID prefix. Ideally the file will be something
+	// like "/var/local/uuid/prefix", and the contents of the file will be bytes
+	// that resemble "host.example.com_45353453".
+	uuidPrefix flagx.FileBytes
 )
 
-// getPrefix returns a prefix string which contains the hostname and approximate
-// boot time of the machine, which globally uniquely identifies the socket uuid
-// namespace, assuming the the namespace was not created more than once in the
-// span of two seconds.
-//
-// The return values of this function should be cached because that pair should
-// be constant for a given instance of the program, unless the boot time changes
-// (how?) or the hostname changes (why?) while this program is running.
-func getPrefix(proxyFile string) (string, error) {
-	contents, err := ioutil.ReadFile(proxyFile)
-	return string(contents), err
+func init() {
+	flag.Var(&uuidPrefix, "uuid-prefix-file", "The file holding the UUID prefix for sockets created in this network namespace.")
 }
 
 // getCookie returns the cookie (the UUID) associated with a socket. For a given
@@ -108,25 +92,11 @@ func FromFile(file *os.File) (string, error) {
 	if err != nil {
 		return invalidUUID, err
 	}
-	return FromCookie(cookie)
+	return FromCookie(cookie), nil
 }
 
 // FromCookie returns a string that is a globally unique identifier for the
 // passed-in socket cookie.
-//
-// This function will never return the empty string, but the returned string
-// value should only be used if the error is nil.
-func FromCookie(cookie uint64) (string, error) {
-	cachedPrefixInitOnce.Do(
-		func() {
-			// We can't do this setup in init() because the value of the flag needs to be parsed
-			// from the command line. So we do it in this function, which should only be
-			// called once.
-			cachedPrefixString, cachedPrefixError = getPrefix(*UUIDPrefixFile)
-		},
-	)
-	if cachedPrefixError != nil {
-		return invalidUUID, cachedPrefixError
-	}
-	return fmt.Sprintf("%s_%016X", cachedPrefixString, cookie), nil
+func FromCookie(cookie uint64) string {
+	return fmt.Sprintf("%s_%016X", string(uuidPrefix), cookie)
 }
