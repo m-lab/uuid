@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	// Variables to aid in mocking for testing.
+	// Variables to aid in mocking for whitebox testing.
 	osHostname = os.Hostname
 	procUptime = "/proc/uptime"
 )

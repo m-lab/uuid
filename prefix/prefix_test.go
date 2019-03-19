@@ -49,11 +49,8 @@ func TestGenerateWithBadHostname(t *testing.T) {
 	}
 
 	s, err := generate([]string{})
-	if err == nil {
-		t.Error("Should have had an error")
-	}
-	if s == "" {
-		t.Error("Errors should not have an empty return string")
+	if err == nil || s == "" {
+		t.Error("Should have had a non-nil error and non-empty returned string")
 	}
 }
 
@@ -70,10 +67,30 @@ func TestGenerateWithNonexistentProcUptime(t *testing.T) {
 		procUptime = "/proc/uptime"
 	}()
 	s, err := generate([]string{})
-	if err == nil {
-		t.Error("Should have had an error")
+	if err == nil || s == "" {
+		t.Error("Should have had a non-nil error and non-empty returned string")
 	}
-	if s == "" {
-		t.Error("Errors should not have an empty return string")
+}
+
+func TestGenerateWithBadProcUptime(t *testing.T) {
+	f, err := ioutil.TempFile("", "TestGenerateWithBadProcUptime")
+	rtx.Must(err, "Could not create tempfile")
+	defer os.Remove(f.Name())
+
+	procUptime = f.Name()
+	defer func() {
+		procUptime = "/proc/uptime"
+	}()
+
+	rtx.Must(ioutil.WriteFile(f.Name(), []byte("123"), 0600), "Could not write to temp file")
+	s, err := generate([]string{})
+	if err == nil || s == "" {
+		t.Error("Should have had a non-nil error and non-empty returned string")
+	}
+
+	rtx.Must(ioutil.WriteFile(f.Name(), []byte("this_should_not_parse 123"), 0600), "Could not write to temp file")
+	s, err = generate([]string{})
+	if err == nil || s == "" {
+		t.Error("Should have had a non-nil error and non-empty returned string")
 	}
 }
