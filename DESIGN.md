@@ -1,9 +1,9 @@
 # Making tcp-info and paris-traceroute data joinable with experiment data
 
-author       | Peter Boothe <pboothe@google.com>
--------------+----------------
-last updated | 2019-03-19
-status       | approved
+| author       | Peter Boothe <pboothe@google.com> |
+|--------------|-----------------------------------|
+| last updated | 2019-03-19                        |
+| status       | approved                          |
 
 ## Introduction
 
