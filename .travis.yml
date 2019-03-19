@@ -1,0 +1,27 @@
+# Travis configuration for go
+#
+# See README for more information about this repository.
+#
+# This repository does NOT do any deployments or installs.  However,
+# it includes a lot of integration tests, which often require
+# credentials.
+#
+#  * decrypt service account credentials
+#  * install the Google Cloud SDK command line tools (gcloud)
+#  * cache the gcloud installation and setup
+#  * test and build the go code
+#
+language: go
+dist: xenial
+
+before_install:
+# Coverage tools
+- go get github.com/mattn/goveralls
+
+script:
+# Build everything and retrieve any component libraries.
+- go get ./...
+# Run every regular unit test.
+- go test -covermode=count -coverprofile=_coverage.cov -v ./...
+# Submit coverage to Coveralls.io
+- $HOME/gopath/bin/goveralls -coverprofile=_coverage.cov -service=travis-ci
