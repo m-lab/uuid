@@ -64,9 +64,6 @@ func TestFromFileError(t *testing.T) {
 	if err == nil {
 		t.Error("Should have had an error")
 	}
-	if err != cachedPrefixError {
-		t.Error("Error should have been", cachedPrefixError, "not", err)
-	}
 	if id == "" {
 		t.Error("An error should not cause an empty-string uuid to be returned")
 	}
@@ -89,29 +86,6 @@ func TestFromTCPConnError(t *testing.T) {
 
 	id, err := FromTCPConn(conn)
 
-	if err == nil {
-		t.Error("Should have had an error")
-	}
-	if id == "" {
-		t.Error("Should not return the empty string on error")
-	}
-}
-
-func TestFromTCPConnError(t *testing.T) {
-	cleanup := setup("host.example.com_1552945174")
-	defer cleanup()
-	localAddr, err := net.ResolveTCPAddr("tcp", "localhost:12346")
-	rtx.Must(err, "No localhost")
-	listener, err := net.ListenTCP("tcp", localAddr)
-	rtx.Must(err, "Could not make TCP listener")
-	local, err := net.Dial("tcp", ":12346")
-	defer local.Close()
-	rtx.Must(err, "Could not connect to myself")
-	conn, err := listener.AcceptTCP()
-	rtx.Must(err, "Could not accept conn1")
-	conn.Close()
-	local.Close()
-	id, err := FromTCPConn(conn)
 	if err == nil {
 		t.Error("Should have had an error")
 	}
