@@ -10,5 +10,9 @@ The only case the uniqueness of the UUID could be violated is if two machines
 have the same hostname and booted up at the exact same second in time, but it is
 bad practice to give machines the same hostname (so don't).
 
+⚠️: This library is fully supported on Linux systems _only_. Using this
+library on non Linux system will compile but most likely will not work
+as intended. Use on non Linux systems at your own risk.
+
 The design of the UUIDs and this system for creating them can be found in
 [`DESIGN.md`](https://github.com/m-lab/uuid/blob/master/DESIGN.md).
