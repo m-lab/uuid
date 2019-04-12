@@ -1,16 +1,10 @@
 package socookie
 
 import (
-	"flag"
 	"fmt"
-	"net"
 	"os"
 	"syscall"
 	"unsafe"
-
-	"github.com/m-lab/uuid/prefix"
-
-	"github.com/m-lab/go/flagx"
 )
 
 const (
