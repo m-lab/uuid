@@ -1,7 +1,6 @@
 package prefix
 
 import (
-	"errors"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -11,6 +10,12 @@ import (
 )
 
 func TestUnsafeString(t *testing.T) {
+	osLookupEnv = func(e string) (string, bool) {
+		return "pod-xtylq", true
+	}
+	defer func() {
+		osLookupEnv = os.LookupEnv
+	}()
 	s := UnsafeString()
 	if !strings.Contains(s, "unsafe") {
 		t.Error(s, "should contain the substring \"unsafe\"")
@@ -18,6 +23,13 @@ func TestUnsafeString(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
+	osLookupEnv = func(e string) (string, bool) {
+		return "pod-xtylq", true
+	}
+	defer func() {
+		osLookupEnv = os.LookupEnv
+	}()
+
 	f, err := ioutil.TempFile("", "TestGenerate")
 	rtx.Must(err, "Could not create tempfile")
 	defer os.Remove(f.Name())
@@ -32,11 +44,11 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestGenerateWithBadHostname(t *testing.T) {
-	osHostname = func() (string, error) {
-		return "", errors.New("hostname error for testing")
+	osLookupEnv = func(e string) (string, bool) {
+		return "", false
 	}
 	defer func() {
-		osHostname = os.Hostname
+		osLookupEnv = os.LookupEnv
 	}()
 
 	f, err := ioutil.TempFile("", "TestGenerateWithBadHostname")
