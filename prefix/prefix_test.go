@@ -6,11 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/m-lab/go/osx"
 	"github.com/m-lab/go/rtx"
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("POD_NAME", "pod-x9lnt")
+	cleanupPodNameEnv := osx.MustSetenv("POD_NAME", "pod-x9lnt")
+	defer cleanupPodNameEnv()
 	os.Exit(m.Run())
 }
 
