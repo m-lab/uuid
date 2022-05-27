@@ -9,13 +9,12 @@ import (
 	"github.com/m-lab/go/rtx"
 )
 
+func TestMain(m *testing.M) {
+	os.Setenv("POD_NAME", "pod-x9lnt")
+	os.Exit(m.Run())
+}
+
 func TestUnsafeString(t *testing.T) {
-	osLookupEnv = func(e string) (string, bool) {
-		return "pod-xtylq", true
-	}
-	defer func() {
-		osLookupEnv = os.LookupEnv
-	}()
 	s := UnsafeString()
 	if !strings.Contains(s, "unsafe") {
 		t.Error(s, "should contain the substring \"unsafe\"")
@@ -23,13 +22,6 @@ func TestUnsafeString(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	osLookupEnv = func(e string) (string, bool) {
-		return "pod-xtylq", true
-	}
-	defer func() {
-		osLookupEnv = os.LookupEnv
-	}()
-
 	f, err := ioutil.TempFile("", "TestGenerate")
 	rtx.Must(err, "Could not create tempfile")
 	defer os.Remove(f.Name())
@@ -43,7 +35,7 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
-func TestGenerateWithBadHostname(t *testing.T) {
+func TestGenerateWithBadPodName(t *testing.T) {
 	osLookupEnv = func(e string) (string, bool) {
 		return "", false
 	}
