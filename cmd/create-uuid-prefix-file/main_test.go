@@ -15,8 +15,11 @@ func TestMain(t *testing.T) {
 	rtx.Must(err, "Could not create tempfile")
 	defer os.Remove(f.Name())
 
-	cleanupEnv := osx.MustSetenv("FILENAME", f.Name())
-	defer cleanupEnv()
+	cleanupFilenameEnv := osx.MustSetenv("FILENAME", f.Name())
+	defer cleanupFilenameEnv()
+
+	cleanupPodnameEnv := osx.MustSetenv("POD_NAME", "pod-x9rul")
+	defer cleanupPodnameEnv()
 
 	main()
 
