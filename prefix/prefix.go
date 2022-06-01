@@ -47,14 +47,15 @@ func UnsafeString() string {
 // the returned string without checking the error condition and the returned
 // string is the empty string.
 func generate(extras []string) (string, error) {
+	var err error
 	// If it exists, prefer using the value of the environment variable POD_NAME
 	// as the prefix for the UUID, else fall back on using the value of
 	// os.Hostname().
 	prefixValue, ok := osLookupEnv("POD_NAME")
 	if !ok || prefixValue == "" {
-		prefixValue, err := osHostname()
+		prefixValue, err = osHostname()
 		if err != nil {
-			return prefixValue + "BADPREFIXVALUE", err
+			return "BADHOSTNAME", err
 		}
 	}
 	now := time.Now()
