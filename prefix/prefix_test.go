@@ -50,6 +50,27 @@ func TestGenerateWithPodNamePrefix(t *testing.T) {
 	}
 }
 
+func TestGenerateWithoutPodNameEnvVar(t *testing.T) {
+	osLookupEnv = func(e string) (string, bool) {
+		return "", false
+	}
+	osHostname = func() (string, error) {
+		return "GOODHOSTNAME", nil
+	}
+	defer func() {
+		osLookupEnv = os.LookupEnv
+		osHostname = os.Hostname
+	}()
+
+	s, err := generate([]string{})
+	if err != nil {
+		t.Errorf("err should have been nil but got: %v", err)
+	}
+	if !strings.HasPrefix(s, "GOODHOSTNAME") {
+		t.Errorf("wanted prefix 'GOODHOSTNAME', but got '%s'", s)
+	}
+}
+
 func TestGenerateWithBadHostName(t *testing.T) {
 	osHostname = func() (string, error) {
 		return "", errors.New("hostname error for testing")
@@ -75,8 +96,8 @@ func TestGenerateWithBadHostName(t *testing.T) {
 	if err == nil {
 		t.Error("expected an error")
 	}
-	if !strings.HasPrefix(s, "BADHOSTNAME") {
-		t.Errorf("wanted value of 'BADHOSTNAME', but got '%s'", s)
+	if !strings.HasPrefix(s, "BADPREFIX") {
+		t.Errorf("wanted value of 'BADPREFIX', but got '%s'", s)
 	}
 }
 

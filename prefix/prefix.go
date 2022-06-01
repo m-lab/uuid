@@ -42,21 +42,30 @@ func UnsafeString() string {
 	return s
 }
 
+// getPrefix determines an appropriate prefix for the UUID. If the environment
+// variable POD_NAME exists and is not empty, the value of that variable will be
+// returned, else the value of os.Hostname() will be returned.
+func getPrefix() (string, error) {
+	prefixValue, ok := osLookupEnv("POD_NAME")
+	if ok && prefixValue != "" {
+		return prefixValue, nil
+	}
+	prefixValue, err := osHostname()
+	if err != nil {
+		return "", err
+	}
+	return prefixValue, nil
+}
+
 // generate creates the UUID prefix. It never returns the empty string, because
 // poorly-coded library users will likely cause terrible problems if they use
 // the returned string without checking the error condition and the returned
 // string is the empty string.
 func generate(extras []string) (string, error) {
 	var err error
-	// If it exists, prefer using the value of the environment variable POD_NAME
-	// as the prefix for the UUID, else fall back on using the value of
-	// os.Hostname().
-	prefixValue, ok := osLookupEnv("POD_NAME")
-	if !ok || prefixValue == "" {
-		prefixValue, err = osHostname()
-		if err != nil {
-			return "BADHOSTNAME", err
-		}
+	prefixValue, err := getPrefix()
+	if err != nil {
+		return "BADPREFIX", err
 	}
 	now := time.Now()
 	uptimeBytes, err := ioutil.ReadFile(procUptime)
