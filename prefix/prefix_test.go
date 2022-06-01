@@ -11,8 +11,10 @@ import (
 	"github.com/m-lab/go/rtx"
 )
 
+var podName string = "pod-x9lnt"
+
 func TestMain(m *testing.M) {
-	cleanupPodNameEnv := osx.MustSetenv("POD_NAME", "pod-x9lnt")
+	cleanupPodNameEnv := osx.MustSetenv("POD_NAME", podName)
 	defer cleanupPodNameEnv()
 	os.Exit(m.Run())
 }
@@ -38,6 +40,16 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
+func TestGenerateWithPodNamePrefix(t *testing.T) {
+	s, err := generate([]string{})
+	if err != nil {
+		t.Errorf("err should have been nil but got: %v", err)
+	}
+	if !strings.HasPrefix(s, podName) {
+		t.Errorf("wanted prefix '%s', but got '%s'", podName, s)
+	}
+}
+
 func TestGenerateWithBadHostName(t *testing.T) {
 	osHostname = func() (string, error) {
 		return "", errors.New("hostname error for testing")
@@ -60,8 +72,11 @@ func TestGenerateWithBadHostName(t *testing.T) {
 	}
 
 	s, err := generate([]string{})
-	if err == nil || s == "" {
-		t.Error("Should have had a non-nil error and non-empty returned string")
+	if err == nil {
+		t.Error("expected an error")
+	}
+	if !strings.HasPrefix(s, "BADHOSTNAME") {
+		t.Errorf("wanted value of 'BADHOSTNAME', but got '%s'", s)
 	}
 }
 
