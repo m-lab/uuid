@@ -12,6 +12,7 @@ import (
 
 var (
 	// Variables to aid in mocking for whitebox testing.
+	osHostname  = os.Hostname
 	osLookupEnv = os.LookupEnv
 	procUptime  = "/proc/uptime"
 )
@@ -46,26 +47,32 @@ func UnsafeString() string {
 // the returned string without checking the error condition and the returned
 // string is the empty string.
 func generate(extras []string) (string, error) {
-	podName, ok := osLookupEnv("POD_NAME")
-	if !ok {
-		return "BADPODNAME", errors.New("POD_NAME env variable does not exist")
+	// If it exists, prefer using the value of the environment variable POD_NAME
+	// as the prefix for the UUID, else fall back on using the value of
+	// os.Hostname().
+	prefixValue, ok := osLookupEnv("POD_NAME")
+	if !ok || prefixValue == "" {
+		prefixValue, err := osHostname()
+		if err != nil {
+			return prefixValue + "BADPREFIXVALUE", err
+		}
 	}
 	now := time.Now()
 	uptimeBytes, err := ioutil.ReadFile(procUptime)
 	if err != nil {
-		return podName + "_BADBOOTTIME", err
+		return prefixValue + "_BADBOOTTIME", err
 	}
 	uptimePieces := strings.Split(string(uptimeBytes), " ")
 	if len(uptimePieces) < 2 {
-		return podName + "_BADBOOTTIME", errors.New("Could not tokenize /proc/uptime contents")
+		return prefixValue + "_BADBOOTTIME", errors.New("could not tokenize /proc/uptime contents")
 	}
 	uptimeFloat, err := strconv.ParseFloat(uptimePieces[0], 64)
 	if err != nil {
-		return podName + "_BADBOOTTIME", errors.New("Could not parse /proc/uptime contents")
+		return prefixValue + "_BADBOOTTIME", errors.New("could not parse /proc/uptime contents")
 	}
 	boottime := now.Add(-1 * time.Duration(uptimeFloat*1000000) * time.Microsecond).Unix()
 	pieces := []string{
-		podName,
+		prefixValue,
 		fmt.Sprintf("%d", boottime),
 	}
 	pieces = append(pieces, extras...)

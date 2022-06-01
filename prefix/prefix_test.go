@@ -1,6 +1,7 @@
 package prefix
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -37,11 +38,15 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
-func TestGenerateWithBadPodName(t *testing.T) {
+func TestGenerateWithBadHostName(t *testing.T) {
+	osHostname = func() (string, error) {
+		return "", errors.New("hostname error for testing")
+	}
 	osLookupEnv = func(e string) (string, bool) {
 		return "", false
 	}
 	defer func() {
+		osHostname = os.Hostname
 		osLookupEnv = os.LookupEnv
 	}()
 
