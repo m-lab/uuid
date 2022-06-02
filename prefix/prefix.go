@@ -12,8 +12,9 @@ import (
 
 var (
 	// Variables to aid in mocking for whitebox testing.
-	osHostname = os.Hostname
-	procUptime = "/proc/uptime"
+	osHostname  = os.Hostname
+	osLookupEnv = os.LookupEnv
+	procUptime  = "/proc/uptime"
 )
 
 // Generate creates a prefix and writes it to the specified file. This file
@@ -41,31 +42,47 @@ func UnsafeString() string {
 	return s
 }
 
+// getPrefix determines an appropriate prefix for the UUID. If the environment
+// variable POD_NAME exists and is not empty, the value of that variable will be
+// returned, else the value of os.Hostname() will be returned.
+func getPrefix() (string, error) {
+	prefixValue, ok := osLookupEnv("POD_NAME")
+	if ok && prefixValue != "" {
+		return prefixValue, nil
+	}
+	prefixValue, err := osHostname()
+	if err != nil {
+		return "", err
+	}
+	return prefixValue, nil
+}
+
 // generate creates the UUID prefix. It never returns the empty string, because
 // poorly-coded library users will likely cause terrible problems if they use
 // the returned string without checking the error condition and the returned
 // string is the empty string.
 func generate(extras []string) (string, error) {
-	hostname, err := osHostname()
+	var err error
+	prefixValue, err := getPrefix()
 	if err != nil {
-		return "BADHOSTNAME", err
+		return "BADPREFIX", err
 	}
 	now := time.Now()
 	uptimeBytes, err := ioutil.ReadFile(procUptime)
 	if err != nil {
-		return hostname + "_BADBOOTTIME", err
+		return prefixValue + "_BADBOOTTIME", err
 	}
 	uptimePieces := strings.Split(string(uptimeBytes), " ")
 	if len(uptimePieces) < 2 {
-		return hostname + "_BADBOOTTIME", errors.New("Could not tokenize /proc/uptime contents")
+		return prefixValue + "_BADBOOTTIME", errors.New("could not tokenize /proc/uptime contents")
 	}
 	uptimeFloat, err := strconv.ParseFloat(uptimePieces[0], 64)
 	if err != nil {
-		return hostname + "_BADBOOTTIME", errors.New("Could not parse /proc/uptime contents")
+		return prefixValue + "_BADBOOTTIME", errors.New("could not parse /proc/uptime contents")
 	}
 	boottime := now.Add(-1 * time.Duration(uptimeFloat*1000000) * time.Microsecond).Unix()
 	pieces := []string{
-		hostname,
+		prefixValue,
 		fmt.Sprintf("%d", boottime),
 	}
 	pieces = append(pieces, extras...)

@@ -12,11 +12,13 @@
 #  * test and build the go code
 #
 language: go
-dist: xenial
+
+go:
+- 1.17
 
 before_install:
 # Coverage tools
-- go get github.com/mattn/goveralls
+- go install github.com/mattn/goveralls@latest
 
 script:
 # Build everything and retrieve any component libraries.
@@ -25,3 +27,4 @@ script:
 - go test -covermode=count -coverprofile=_coverage.cov -v ./...
 # Submit coverage to Coveralls.io
 - $HOME/gopath/bin/goveralls -coverprofile=_coverage.cov -service=travis-ci
+
