@@ -21,7 +21,7 @@ func get(file *os.File) (uint64, error) {
 		return 0, err
 	}
 	var errno syscall.Errno
-	rawConn.Control(func(fd uintptr) {
+	err = rawConn.Control(func(fd uintptr) {
 		// GetsockoptInt does not work for 64 bit integers, which is what the UUID is.
 		// So we crib from the GetsockoptInt implementation and ndt-server/tcpinfox,
 		// and call the syscall manually.
@@ -34,6 +34,9 @@ func get(file *os.File) (uint64, error) {
 			uintptr(unsafe.Pointer(&cookieLen)),
 			uintptr(0))
 	})
+	if err != nil {
+		return 0, err
+	}
 	if errno != 0 {
 		return 0, fmt.Errorf("error in Getsockopt. Errno=%d", errno)
 	}
