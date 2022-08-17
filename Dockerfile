@@ -5,6 +5,6 @@ RUN cd /go/src/github.com/m-lab/uuid && CGO_ENABLED=0 go install -v ./cmd/create
 FROM alpine:3.16
 COPY --from=uuid-creator-build /go/bin/create-uuid-prefix-file /
 WORKDIR /
-# Make sure /uuid-annotator can run (has no missing external dependencies).
+# Make sure /create-uuid-prefix-file can run (has no missing external dependencies).
 RUN /create-uuid-prefix-file -h 2> /dev/null
 ENTRYPOINT ["/create-uuid-prefix-file"]
