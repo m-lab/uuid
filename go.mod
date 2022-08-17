@@ -1,6 +1,6 @@
 module github.com/m-lab/uuid
 
-go 1.17
+go 1.18
 
 require github.com/m-lab/go v0.1.47
 
