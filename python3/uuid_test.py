@@ -1,10 +1,10 @@
 import os
-import tempfile
 import socket
+import tempfile
 import unittest
+import uuid
 from unittest import mock
 
-import uuid
 
 class TestUUID_from_socket(unittest.TestCase):
     def setUp(self):
