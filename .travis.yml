@@ -19,12 +19,14 @@ go:
 before_install:
 # Coverage tools
 - go install github.com/mattn/goveralls@latest
+- sudo apt-get update && sudo apt-get install -y python3
 
 script:
 # Build everything and retrieve any component libraries.
 - go get ./...
 # Run every regular unit test.
 - go test -covermode=count -coverprofile=_coverage.cov -v ./...
+- python3 ./python3/uuid_test.py
 # Submit coverage to Coveralls.io
 - $HOME/gopath/bin/goveralls -coverprofile=_coverage.cov -service=travis-ci
 
