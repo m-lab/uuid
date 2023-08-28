@@ -1,4 +1,4 @@
-FROM golang:1.18 as uuid-creator-build
+FROM golang:1.20 as uuid-creator-build
 COPY . /go/src/github.com/m-lab/uuid/
 RUN cd /go/src/github.com/m-lab/uuid && CGO_ENABLED=0 go install -v ./cmd/create-uuid-prefix-file
 
