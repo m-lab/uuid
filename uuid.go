@@ -50,10 +50,10 @@ func init() {
 	flag.Var(&uuidPrefix, "uuid-prefix-file", "The file holding the UUID prefix for sockets created in this network namespace.")
 }
 
-// SetUUIDPrefix allows the prefix filename to be passed in via a function call
-// instead of via the command line. This function is useful for programs with
-// custom command lines that want to use this package.
-func SetUUIDPrefix(filename string) error {
+// SetUUIDPrefixFile allows the prefix filename to be passed in via a function
+// call instead of via the command line. This function is useful for programs
+// with custom command lines that want to use this package.
+func SetUUIDPrefixFile(filename string) error {
 	fileContents, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
